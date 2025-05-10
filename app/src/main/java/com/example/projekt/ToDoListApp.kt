@@ -35,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.projekt.ui.theme.LoginScreen
 import com.example.todolistapp.data.DataSource
 import com.example.todolistapp.database.ToDoRepository
 import com.example.todolistapp.ui.AddEditScreen
@@ -100,7 +101,7 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
             navController = navController,
             startDestination = ToDoAppDestinations.Login.name,
             modifier = Modifier
-                .fillMaxSize() s
+                .fillMaxSize()
                 .padding(innerPadding)
         ) {
             composable(route = ToDoAppDestinations.Login.name) {
