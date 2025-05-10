@@ -35,12 +35,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.projekt.ui.theme.LoginScreen
+import com.example.projekt.ui.AddEditScreen
+import com.example.projekt.ui.ToDoListScreen
+import com.example.projekt.ui.LoginScreen
+import com.example.todolistapp.R
 import com.example.todolistapp.data.DataSource
 import com.example.todolistapp.database.ToDoRepository
-import com.example.todolistapp.ui.AddEditScreen
-import com.example.todolistapp.ui.LoginScreen
-import com.example.todolistapp.ui.ToDoListScreen
 import kotlinx.coroutines.launch
 
 enum class ToDoAppDestinations(@StringRes val title: Int) {

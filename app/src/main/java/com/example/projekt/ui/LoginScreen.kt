@@ -1,6 +1,5 @@
-package com.example.projekt.ui.theme
-
-package com.example.todolistapp.ui
+@file:Suppress("FunctionName")
+package com.example.projekt.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,9 +66,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             Button(onClick = { onLoginSuccess() }) {
                 Text("Login")
             }
-            ) {
-            Text("Login")
-        }
         }
     }
 }
