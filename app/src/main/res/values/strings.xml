@@ -14,4 +14,9 @@
     <string name="add_screen_title">Add task</string>
     <string name="edit_screen_title">Edit task</string>
     <string name="login_screen_title">Login</string>
+    <string name="event_screen_title">Event</string>
+    <string name="about_event_screen_title">about</string>
+    <string name="post_event_screen_title">posts</string>
+    <string name="todo_event_screen_title">todo</string>
+    <string name="money_event_screen_title">money</string>
 </resources>

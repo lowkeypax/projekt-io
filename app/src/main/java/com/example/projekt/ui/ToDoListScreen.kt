@@ -1,5 +1,5 @@
 @file:Suppress("FunctionName")
-package com.example.projekt.ui
+package com.example.todolistapp.ui
 
 import android.util.Log
 import androidx.compose.animation.slideOutHorizontally
@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -90,7 +91,7 @@ fun DeleteConfirmationDialogPreview() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ToDoListScreen(repository: ToDoRepository, modifier: Modifier = Modifier, onEdit: (Task) -> Unit = {}) {
+fun ToDoListScreen(repository: ToDoRepository, modifier: Modifier = Modifier, onEdit: (Task) -> Unit = {}, onEvent: (Task) -> Unit = {}) {
     val tasks by repository.tasksFlow.collectAsState(initial = emptyList()) // Automatically updates when DB
     Log.d("ToDoListScreen", "Tasks: $tasks")
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -116,7 +117,8 @@ fun ToDoListScreen(repository: ToDoRepository, modifier: Modifier = Modifier, on
                             coroutineScope.launch {
                                 repository.updateTask(task.copy(isCompleted = it))
                             }
-                        }
+                        },
+                        onEvent = {onEvent(task)}
                     )
                 }
             }
@@ -153,6 +155,7 @@ fun ToDoListScreenPreview() {
 fun TaskItem(
     task: Task,
     onEditClick: () -> Unit,
+    onEvent: () -> Unit,
     onDelete: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -163,7 +166,7 @@ fun TaskItem(
             .fillMaxWidth()
             .padding(8.dp)
             .combinedClickable(
-                onClick = {expanded = !expanded },
+                onClick = onEvent,
                 onLongClick = onDelete //long press to delete
             ),
         color = if (task.isCompleted) Color.Gray
@@ -178,9 +181,6 @@ fun TaskItem(
             horizontalAlignment = Alignment.CenterHorizontally,
         )
         {
-            //
-
-            //else
                 Box(
                     modifier = Modifier
                 )
@@ -191,25 +191,12 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             )
             {
-                if (task.isImportant)
-                {Box(
-                    modifier = Modifier.background(color = Color.Red, shape = RectangleShape).width(16.dp)
-                        .fillMaxHeight()
-                ) {}}
-                if (task.isCompleted) {
-
-                }
-                Checkbox(
-                    checked = task.isCompleted,
-                    onCheckedChange = { onCheckedChange(it) }
-                )
                 Text(
                     text = task.name,
-                    textDecoration = if (task.isCompleted)
-                        TextDecoration.LineThrough else TextDecoration.None)
-                IconButton(onClick = onEditClick){
-                    Icon(Icons.TwoTone.Edit, contentDescription = "Edit Task")
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
                 }
+                Text(task.description)
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = "Expand",
@@ -218,11 +205,8 @@ fun TaskItem(
                         .rotate(if (expanded) 180f else 0f)
                 )
             }
-            if (expanded)
-            Text(task.description)
         }
     }
-}
 
 @Preview
 @Composable
@@ -233,6 +217,7 @@ fun TaskItemPreview(){
             onEditClick = { },
             onDelete = {},
             onCheckedChange = {  },
+            onEvent = {},
             modifier = Modifier
         )
     }

@@ -1,12 +1,17 @@
 @file:Suppress("FunctionName")
-package com.example.projekt
+package com.example.todolistapp
 
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -16,6 +21,8 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -36,18 +43,28 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.projekt.ui.AddEditScreen
-import com.example.projekt.ui.ToDoListScreen
 import com.example.projekt.ui.LoginScreen
-import com.example.todolistapp.R
-import com.example.todolistapp.data.DataSource
+import com.example.projekt.ui.MoneysEventScreen
+import com.example.projekt.ui.PostsEventScreen
+import com.example.projekt.ui.ToDosEventScreen
 import com.example.todolistapp.database.ToDoRepository
+import com.example.todolistapp.ui.EventScreen
+import com.example.todolistapp.ui.ToDoListScreen
 import kotlinx.coroutines.launch
 
 enum class ToDoAppDestinations(@StringRes val title: Int) {
     List(title = R.string.list_screen_title),
     Add(title = R.string.add_screen_title),
     Edit(title = R.string.edit_screen_title),
-    Login(title = R.string.login_screen_title)
+    Login(title = R.string.login_screen_title),
+    Event(title = R.string.event_screen_title),
+
+    PostsEvent(title = R.string.post_event_screen_title),
+    ToDosEvent(title = R.string.todo_event_screen_title),
+    MoneysEvent(title = R.string.money_event_screen_title);
+
+    val showInBottomBar: Boolean
+        get() = this in listOf(Event, PostsEvent, ToDosEvent, MoneysEvent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +88,28 @@ fun ToDoListTopBar(
     )
 }
 
+@Composable
+fun BottomBar(navController: NavHostController, currentRoute: String?) {
+    NavigationBar {
+        ToDoAppDestinations.entries
+            .filter { it.showInBottomBar }
+            .forEach { destination ->
+                NavigationBarItem(
+                    selected = currentRoute == destination.name,
+                    onClick = {
+                        navController.navigate(destination.name) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { /* Optionally use icons here */ },
+                    label = { Text(stringResource(destination.title)) }
+                )
+            }
+    }
+}
+
 
 @Composable
 fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = rememberNavController()) {
@@ -88,11 +127,26 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                 navigateUp = { navController.navigateUp() }
             )
         },
+        bottomBar = {
+            if (currentScreen.showInBottomBar) {
+                BottomBar(navController = navController, currentRoute = screenName)
+            }
+        },
         floatingActionButton = {
+            if (currentScreen == ToDoAppDestinations.List)
             FloatingActionButton(onClick = {
                 navController.navigate(ToDoAppDestinations.Add.name)
             }) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Task")
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add Task")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Create")
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End
@@ -115,8 +169,32 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                 ToDoListScreen(repository = repository,
                     onEdit = { taskToEdit ->
                         navController.navigate("${ToDoAppDestinations.Edit.name}/${taskToEdit.taskId}")
+                    },
+                    onEvent = { taskToView ->
+                        navController.navigate("${ToDoAppDestinations.Event.name}/${taskToView.taskId}")
                     }
                 )
+            }
+            composable(
+                //todo: przekazywanie pomiedzy subpagami, moze viewmodel
+                route = "${ToDoAppDestinations.Event.name}/{taskToViewId}",
+                arguments = listOf(navArgument(name = "taskToViewId") {
+                    type = NavType.LongType
+                })
+            ) { backStackEntry ->
+                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId")
+                taskToViewId ?: return@composable
+                val task by repository.getTaskById(taskToViewId).collectAsState(initial = null)
+                if (task == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    EventScreen(
+                        task = task,
+                        navController = navController
+                    )
+                }
             }
             composable(route = ToDoAppDestinations.Add.name) {
                 AddEditScreen(
@@ -157,6 +235,15 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                             navController.navigateUp()
                         })
                 }
+            }
+            composable(route = ToDoAppDestinations.PostsEvent.name) {
+                PostsEventScreen()
+            }
+            composable(route = ToDoAppDestinations.ToDosEvent.name) {
+                ToDosEventScreen()
+            }
+            composable(route = ToDoAppDestinations.MoneysEvent.name) {
+                MoneysEventScreen()
             }
         }
     }
