@@ -1,15 +1,13 @@
 @file:Suppress("FunctionName")
 package com.example.todolistapp
 
-import android.content.Context
-import android.content.Intent
+import com.example.projekt.viewmodel.TaskViewModel
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -27,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -42,14 +42,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.projekt.viewmodel.TaskViewModelFactory
 import com.example.projekt.ui.AddEditScreen
 import com.example.projekt.ui.LoginScreen
-import com.example.projekt.ui.MoneysEventScreen
-import com.example.projekt.ui.PostsEventScreen
-import com.example.projekt.ui.ToDosEventScreen
 import com.example.todolistapp.database.ToDoRepository
 import com.example.todolistapp.ui.EventScreen
+import com.example.todolistapp.ui.MoneysEventScreen
+import com.example.todolistapp.ui.PostsEventScreen
 import com.example.todolistapp.ui.ToDoListScreen
+import com.example.todolistapp.ui.ToDosEventScreen
 import kotlinx.coroutines.launch
 
 enum class ToDoAppDestinations(@StringRes val title: Int) {
@@ -61,10 +62,10 @@ enum class ToDoAppDestinations(@StringRes val title: Int) {
 
     PostsEvent(title = R.string.post_event_screen_title),
     ToDosEvent(title = R.string.todo_event_screen_title),
-    MoneysEvent(title = R.string.money_event_screen_title);
+    MoneyEvent(title = R.string.money_event_screen_title);
 
     val showInBottomBar: Boolean
-        get() = this in listOf(Event, PostsEvent, ToDosEvent, MoneysEvent)
+        get() = this in listOf(Event, PostsEvent, ToDosEvent, MoneyEvent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,26 +90,45 @@ fun ToDoListTopBar(
 }
 
 @Composable
-fun BottomBar(navController: NavHostController, currentRoute: String?) {
+fun BottomBar(
+    navController: NavHostController,
+    currentRoute: String?,
+    taskId: Long?
+) {
     NavigationBar {
         ToDoAppDestinations.entries
             .filter { it.showInBottomBar }
             .forEach { destination ->
+                val isSubpage = destination in listOf(
+                    ToDoAppDestinations.Event,
+                    ToDoAppDestinations.PostsEvent,
+                    ToDoAppDestinations.ToDosEvent,
+                    ToDoAppDestinations.MoneyEvent
+                )
+                val route = if (isSubpage && taskId != null) {
+                    "${destination.name}/$taskId"
+                } else {
+                    destination.name
+                }
+
                 NavigationBarItem(
-                    selected = currentRoute == destination.name,
+                    selected = currentRoute?.startsWith(destination.name) == true,
                     onClick = {
-                        navController.navigate(destination.name) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        navController.navigate(route) {
+                            popUpTo(ToDoAppDestinations.Event.name) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
                     },
-                    icon = { /* Optionally use icons here */ },
+                    icon = { /* optional */ },
                     label = { Text(stringResource(destination.title)) }
                 )
             }
     }
 }
+
+
+
 
 
 @Composable
@@ -118,18 +138,28 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
     val currentScreen = ToDoAppDestinations.valueOf(
         screenName ?: ToDoAppDestinations.List.name
     )
+    val taskIdArg = backStackEntry?.arguments?.getLong("taskToViewId")
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             ToDoListTopBar(
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
-                navigateUp = { navController.navigateUp() }
+                navigateUp = {
+                    navController.navigate(ToDoAppDestinations.List.name) {
+                        popUpTo(ToDoAppDestinations.List.name) { inclusive = true }
+                    }
+                }
+
             )
         },
         bottomBar = {
             if (currentScreen.showInBottomBar) {
-                BottomBar(navController = navController, currentRoute = screenName)
+                BottomBar(
+                    navController = navController,
+                    currentRoute = screenName,
+                    taskId = taskIdArg // if accessible here
+                )
             }
         },
         floatingActionButton = {
@@ -175,16 +205,22 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                     }
                 )
             }
+            //eventGraph(navController = navController, repository = repository)
             composable(
-                //todo: przekazywanie pomiedzy subpagami, moze viewmodel
                 route = "${ToDoAppDestinations.Event.name}/{taskToViewId}",
-                arguments = listOf(navArgument(name = "taskToViewId") {
+                arguments = listOf(navArgument("taskToViewId") {
                     type = NavType.LongType
                 })
             ) { backStackEntry ->
-                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId")
-                taskToViewId ?: return@composable
-                val task by repository.getTaskById(taskToViewId).collectAsState(initial = null)
+                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId") ?: return@composable
+                val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(repository))
+
+                LaunchedEffect(taskToViewId) {
+                    viewModel.loadTask(taskToViewId)
+                }
+
+                val task by viewModel.task.collectAsState()
+
                 if (task == null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -196,6 +232,7 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                     )
                 }
             }
+
             composable(route = ToDoAppDestinations.Add.name) {
                 AddEditScreen(
                     onSave = {
@@ -210,15 +247,18 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
             }
             composable(
                 route = ToDoAppDestinations.Edit.name + "/{taskToEditId}",
-                arguments = listOf(navArgument(name = "taskToEditId") {
-                    type = NavType.LongType
-                })
+                arguments = listOf(navArgument("taskToEditId") { type = NavType.LongType })
             ) { backStackEntry ->
-                val taskToEditId = backStackEntry.arguments?.getLong("taskToEditId")
-                taskToEditId ?: return@composable
-                val task by repository.getTaskById(taskToEditId).collectAsState(initial = null)
+                val taskToEditId = backStackEntry.arguments?.getLong("taskToEditId") ?: return@composable
+                val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(repository))
+
+                LaunchedEffect(taskToEditId) {
+                    viewModel.loadTask(taskToEditId)
+                }
+
+                val task by viewModel.task.collectAsState()
+
                 if (task == null) {
-                    // Show a loading screen while waiting for the task
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
@@ -231,20 +271,90 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                             }
                             navController.navigateUp()
                         },
-                        onCancel = {
-                            navController.navigateUp()
-                        })
+                        onCancel = { navController.navigateUp() }
+                    )
                 }
             }
-            composable(route = ToDoAppDestinations.PostsEvent.name) {
-                PostsEventScreen()
+
+            composable(
+                route = "${ToDoAppDestinations.PostsEvent.name}/{taskToViewId}",
+                arguments = listOf(navArgument("taskToViewId") {
+                    type = NavType.LongType
+                })
+            ) { backStackEntry ->
+                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId") ?: return@composable
+                val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(repository))
+
+                LaunchedEffect(taskToViewId) {
+                    viewModel.loadTask(taskToViewId)
+                }
+
+                val task by viewModel.task.collectAsState()
+
+                if (task == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    PostsEventScreen(
+                        task = task,
+                        navController = navController
+                    )
+                }
             }
-            composable(route = ToDoAppDestinations.ToDosEvent.name) {
-                ToDosEventScreen()
+            composable(
+                route = "${ToDoAppDestinations.ToDosEvent.name}/{taskToViewId}",
+                arguments = listOf(navArgument("taskToViewId") {
+                    type = NavType.LongType
+                })
+            ) { backStackEntry ->
+                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId") ?: return@composable
+                val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(repository))
+
+                LaunchedEffect(taskToViewId) {
+                    viewModel.loadTask(taskToViewId)
+                }
+
+                val task by viewModel.task.collectAsState()
+
+                if (task == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    ToDosEventScreen(
+                        task = task,
+                        navController = navController
+                    )
+                }
             }
-            composable(route = ToDoAppDestinations.MoneysEvent.name) {
-                MoneysEventScreen()
+            composable(
+                route = "${ToDoAppDestinations.MoneyEvent.name}/{taskToViewId}",
+                arguments = listOf(navArgument("taskToViewId") {
+                    type = NavType.LongType
+                })
+            ) { backStackEntry ->
+                val taskToViewId = backStackEntry.arguments?.getLong("taskToViewId") ?: return@composable
+                val viewModel: TaskViewModel = viewModel(factory = TaskViewModelFactory(repository))
+
+                LaunchedEffect(taskToViewId) {
+                    viewModel.loadTask(taskToViewId)
+                }
+
+                val task by viewModel.task.collectAsState()
+
+                if (task == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    MoneysEventScreen(
+                        task = task,
+                        navController = navController
+                    )
+                }
             }
+
         }
     }
 
@@ -257,11 +367,4 @@ fun ToDoListAppPreview() {
 }
 
 
-private fun sendList(context: Context, listString: String) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "ToDo List")
-        putExtra(Intent.EXTRA_TEXT, listString)
-    }
-    context.startActivity(intent)
-}
+
