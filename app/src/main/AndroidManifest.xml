@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Projekt"
         tools:targetApi="31"
-        android:name="com.example.projekt.ToDoListApplication">
+        android:name=".ToDoListApplication">
         <activity
             android:name=".MainActivity"
             android:exported="true"

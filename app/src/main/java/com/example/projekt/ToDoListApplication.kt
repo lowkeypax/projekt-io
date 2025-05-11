@@ -1,4 +1,4 @@
-package com.example.projekt
+package com.example.todolistapp
 
 import android.app.Application
 import com.example.todolistapp.database.ToDoDatabase
