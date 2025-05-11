@@ -1,35 +1,55 @@
-package com.example.projekt.ui
+@file:Suppress("FunctionName")
+package com.example.todolistapp.ui
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.example.todolistapp.ToDoAppDestinations
 import com.example.todolistapp.data.Task
 
 @Composable
-fun PostsEventScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Event Posts")
-    }
-    //Text("Event: ${task?.name ?: "Unknown"}")
-}
+fun PostsEventScreen(
+    task: Task? = null,
+    navController: NavHostController
+) {
+    var name by remember { mutableStateOf(task?.name ?: "") }
+    var description by remember { mutableStateOf(task?.description ?: "") }
 
-//@Composable
-//fun PostsEventScreenWrapper(navController: NavController) {
-//    val sharedViewModel = remember { SharedEventViewModel() }
-//    val task by sharedViewModel.selectedTask.collectAsState()
-//
-//    if (task != null) {
-//        PostsEventScreen(task = task!!, navController = navController)
-//    } else {
-//        CircularProgressIndicator() // Ładowanie
-//    }
-//}
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "postspostsposts",
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
