@@ -373,8 +373,6 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                 } else {
                     ListsScreen(
                         task = task,
-                        onCreateList = { navController.navigate(ToDoAppDestinations.Add.name) },
-                        onAddItem = { TODO() },
                         onCheckChanged = { TODO() },
                         shoppingLists = sampleLists
                     )
