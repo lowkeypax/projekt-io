@@ -42,6 +42,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.ioapp.ui.screens.NewAnnouncementScreen
+import com.example.ioapp.ui.screens.NewPollScreen
 import com.example.projekt.viewmodel.TaskViewModelFactory
 import com.example.projekt.ui.AddEditScreen
 import com.example.projekt.ui.LoginScreen
@@ -52,15 +54,24 @@ import com.example.todolistapp.ui.PostsEventScreen
 import com.example.todolistapp.ui.ToDoListScreen
 import com.example.todolistapp.ui.ToDosEventScreen
 import kotlinx.coroutines.launch
+import ui.screens.AnnouncementBoardScreen
+import ui.screens.RegisterScreen
+import ui.screens.WelcomeScreen
 
 enum class ToDoAppDestinations(@StringRes val title: Int) {
+    Welcome(title = R.string.welcome_screen_title),
+
+    Register(title = R.string.register_screen_title),
+    Login(title = R.string.login_screen_title),
+
     List(title = R.string.list_screen_title),
     Add(title = R.string.add_screen_title),
     Edit(title = R.string.edit_screen_title),
-    Login(title = R.string.login_screen_title),
-    Event(title = R.string.event_screen_title),
 
+    Event(title = R.string.event_screen_title),
     PostsEvent(title = R.string.post_event_screen_title),
+    AddAnnouncement(title = R.string.add_announcement_screen_title),
+    AddPoll(title = R.string.add_poll_screen_title),
     ToDosEvent(title = R.string.todo_event_screen_title),
     MoneyEvent(title = R.string.money_event_screen_title);
 
@@ -146,9 +157,15 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
                 navigateUp = {
+                    if(currentScreen == ToDoAppDestinations.Login || currentScreen == ToDoAppDestinations.Register)
+                        navController.navigate(ToDoAppDestinations.Welcome.name) {
+                            popUpTo(ToDoAppDestinations.Welcome.name) { inclusive = true }
+                        }
+                    else(currentScreen == ToDoAppDestinations.Event)
                     navController.navigate(ToDoAppDestinations.List.name) {
                         popUpTo(ToDoAppDestinations.List.name) { inclusive = true }
                     }
+
                 }
 
             )
@@ -173,7 +190,7 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add Task")
+                    Icon(Icons.Filled.Add, contentDescription = "Add Event")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = "Create")
                 }
@@ -183,17 +200,32 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = ToDoAppDestinations.Login.name,
+            startDestination = ToDoAppDestinations.Welcome.name,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+//----------------------WELCOME
+            composable(route = ToDoAppDestinations.Welcome.name) {
+                WelcomeScreen(
+                    onLoginClick = { navController.navigate(ToDoAppDestinations.Login.name) },
+                    onRegisterClick = { navController.navigate(ToDoAppDestinations.Register.name) }
+                )
+            }
+            composable(route = ToDoAppDestinations.Register.name) {
+                RegisterScreen(onRegisterSuccess = {
+                    navController.navigate(ToDoAppDestinations.List.name) {
+                        popUpTo(ToDoAppDestinations.Register.name) { inclusive = true }
+                    }
+                })
+            }
             composable(route = ToDoAppDestinations.Login.name) {
                 LoginScreen(onLoginSuccess = {
                     navController.navigate(ToDoAppDestinations.List.name) {
                         popUpTo(ToDoAppDestinations.Login.name) { inclusive = true }
                     }
                 })
+//-------------------------LISTA I DODAWANIE EVENTÓW
             }
             composable(route = ToDoAppDestinations.List.name) {
                 ToDoListScreen(repository = repository,
@@ -275,7 +307,7 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                     )
                 }
             }
-
+//-------------------------------ANNOUNCEMENTS
             composable(
                 route = "${ToDoAppDestinations.PostsEvent.name}/{taskToViewId}",
                 arguments = listOf(navArgument("taskToViewId") {
@@ -300,8 +332,22 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                         task = task,
                         navController = navController
                     )
+                    AnnouncementBoardScreen(
+                        onCreateAnnouncement = { navController.navigate(ToDoAppDestinations.AddAnnouncement.name) },
+                        onCreatePoll = { navController.navigate(ToDoAppDestinations.AddPoll.name) }
+                    )
                 }
             }
+            composable(route = ToDoAppDestinations.AddAnnouncement.name)
+            {
+                NewAnnouncementScreen(onSubmit = {navController.navigateUp()})
+            }
+            composable(route = ToDoAppDestinations.AddPoll.name)
+            {
+                NewPollScreen(onSubmit = {navController.navigateUp()})
+            }
+
+//-------------------------------------RESZTA
             composable(
                 route = "${ToDoAppDestinations.ToDosEvent.name}/{taskToViewId}",
                 arguments = listOf(navArgument("taskToViewId") {
