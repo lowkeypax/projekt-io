@@ -48,18 +48,20 @@ fun AddEditScreen(
 ){
     var name by remember { mutableStateOf(task?.name ?: "") }
     var description by remember { mutableStateOf(task?.description ?: "") }
-    var isImportant by remember { mutableStateOf(task?.isImportant == true) }
+//    var isImportant by remember { mutableStateOf(task?.isImportant == true) }
     var validationError by remember { mutableStateOf(false) }
 
     Surface (modifier = Modifier.padding(20.dp)) {
-        Column {
+        Column ( modifier = Modifier.padding(20.dp).fillMaxWidth())
+        {
             Text(
-                text = stringResource(R.string.add_task_label),
+                text = stringResource(R.string.add_event_label),
                 modifier = Modifier.fillMaxWidth()
                     .align(Alignment.CenterHorizontally)
                 )
 
             OutlinedTextFieldWithClearAndError(
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
                 value = name,
                 onValueChange = { name = it },
                 label = stringResource(R.string.name_label),
@@ -69,6 +71,7 @@ fun AddEditScreen(
             )
 
             OutlinedTextFieldWithClearAndError(
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
                 value = description,
                 onValueChange = { description = it },
                 label = stringResource(R.string.description_label),
@@ -76,11 +79,6 @@ fun AddEditScreen(
                 isError = validationError,
                 singleLine = false
             )
-
-            SwitchWithText(
-                text = stringResource(R.string.important_label),
-                checked = isImportant
-            ) { isImportant = it }
 
             Row(modifier=Modifier.align(Alignment.CenterHorizontally)){
                 Button(
@@ -104,8 +102,6 @@ fun AddEditScreen(
                                 Task(
                                     name = name,
                                     description = description,
-                                    isImportant = isImportant,
-                                    isCompleted = task?.isCompleted ?: false,
                                     taskId = task?.taskId ?: System.currentTimeMillis()
                                 )
                             )

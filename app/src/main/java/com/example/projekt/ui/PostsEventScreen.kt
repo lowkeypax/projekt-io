@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.todolistapp.ToDoAppDestinations
 import com.example.todolistapp.data.Task
+import ui.screens.AnnouncementBoardScreen
 
 @Composable
 fun PostsEventScreen(
@@ -43,13 +44,6 @@ fun PostsEventScreen(
             text = name,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "postspostsposts",
-            style = MaterialTheme.typography.bodyLarge
         )
     }
 }

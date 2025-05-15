@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.example.ioapp.ui.screens.AboutTripTab
 import com.example.todolistapp.ToDoAppDestinations
 import com.example.todolistapp.data.Task
 
@@ -51,5 +52,8 @@ fun EventScreen(
             text = description,
             style = MaterialTheme.typography.bodyLarge
         )
+        AboutTripTab(
+            participants = listOf("Participant 1", "Participant 2", "Participant 3"),
+        ) { }
     }
 }
