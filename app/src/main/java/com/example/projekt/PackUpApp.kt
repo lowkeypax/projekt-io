@@ -45,14 +45,16 @@ import androidx.navigation.navArgument
 import com.example.ioapp.ui.screens.NewAnnouncementScreen
 import com.example.ioapp.ui.screens.NewPollScreen
 import com.example.projekt.viewmodel.TaskViewModelFactory
-import com.example.projekt.ui.AddEditScreen
-import com.example.projekt.ui.LoginScreen
+import com.example.projekt.ui.screens1.addScreens.AddEditScreen
+import com.example.projekt.ui.screens1.LoginScreen
+import com.example.projekt.ui.screens1.addScreens.AddExpenseScreen
 import com.example.todolistapp.database.ToDoRepository
+import com.example.todolistapp.ui.EventList
 import com.example.todolistapp.ui.EventScreen
+import com.example.todolistapp.ui.ListsScreen
 import com.example.todolistapp.ui.MoneysEventScreen
-import com.example.todolistapp.ui.PostsEventScreen
-import com.example.todolistapp.ui.ToDoListScreen
-import com.example.todolistapp.ui.ToDosEventScreen
+import com.example.todolistapp.ui.ShoppingItem
+import com.example.todolistapp.ui.ShoppingList
 import kotlinx.coroutines.launch
 import ui.screens.AnnouncementBoardScreen
 import ui.screens.RegisterScreen
@@ -70,13 +72,17 @@ enum class ToDoAppDestinations(@StringRes val title: Int) {
 
     Event(title = R.string.event_screen_title),
     PostsEvent(title = R.string.post_event_screen_title),
+    ToDosEvent(title = R.string.todo_event_screen_title),
+    MoneyEvent(title = R.string.money_event_screen_title),
+
     AddAnnouncement(title = R.string.add_announcement_screen_title),
     AddPoll(title = R.string.add_poll_screen_title),
-    ToDosEvent(title = R.string.todo_event_screen_title),
-    MoneyEvent(title = R.string.money_event_screen_title);
+    AddExpence(title = R.string.add_expence_screen_title);
 
     val showInBottomBar: Boolean
         get() = this in listOf(Event, PostsEvent, ToDosEvent, MoneyEvent)
+    val navigate : Boolean
+        get() = this in listOf(List, Event, PostsEvent, ToDosEvent, MoneyEvent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -161,13 +167,13 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                         navController.navigate(ToDoAppDestinations.Welcome.name) {
                             popUpTo(ToDoAppDestinations.Welcome.name) { inclusive = true }
                         }
-                    else(currentScreen == ToDoAppDestinations.Event)
+                    if(currentScreen.navigate)
                     navController.navigate(ToDoAppDestinations.List.name) {
                         popUpTo(ToDoAppDestinations.List.name) { inclusive = true }
                     }
-
+                    else
+                        navController.navigateUp()
                 }
-
             )
         },
         bottomBar = {
@@ -228,7 +234,7 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
 //-------------------------LISTA I DODAWANIE EVENTÓW
             }
             composable(route = ToDoAppDestinations.List.name) {
-                ToDoListScreen(repository = repository,
+                EventList(repository = repository,
                     onEdit = { taskToEdit ->
                         navController.navigate("${ToDoAppDestinations.Edit.name}/${taskToEdit.taskId}")
                     },
@@ -328,11 +334,8 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                         CircularProgressIndicator()
                     }
                 } else {
-                    PostsEventScreen(
-                        task = task,
-                        navController = navController
-                    )
                     AnnouncementBoardScreen(
+                        task = task,
                         onCreateAnnouncement = { navController.navigate(ToDoAppDestinations.AddAnnouncement.name) },
                         onCreatePoll = { navController.navigate(ToDoAppDestinations.AddPoll.name) }
                     )
@@ -368,9 +371,12 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                         CircularProgressIndicator()
                     }
                 } else {
-                    ToDosEventScreen(
+                    ListsScreen(
                         task = task,
-                        navController = navController
+                        onCreateList = { navController.navigate(ToDoAppDestinations.Add.name) },
+                        onAddItem = { TODO() },
+                        onCheckChanged = { TODO() },
+                        shoppingLists = sampleLists
                     )
                 }
             }
@@ -396,9 +402,14 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
                 } else {
                     MoneysEventScreen(
                         task = task,
-                        navController = navController
+                        navController = navController,
+                        onCreateExpences = { navController.navigate(ToDoAppDestinations.AddExpence.name) }
                     )
                 }
+            }
+            composable(route = ToDoAppDestinations.AddExpence.name)
+            {
+                AddExpenseScreen(onSubmit = { navController.navigateUp()})
             }
 
         }
@@ -413,4 +424,25 @@ fun ToDoListAppPreview() {
 }
 
 
-
+val sampleLists = listOf(
+    ShoppingList(
+        id = "1",
+        name = "Lista zakupów",
+        items = listOf(
+            ShoppingItem(id = "a", label = "Chleb", avatar = "KL", checked = true),
+            ShoppingItem(id = "b", label = "Mleko", avatar = "AB", checked = true),
+            ShoppingItem(id = "c", label = "Masło", avatar = null),
+            ShoppingItem(id = "d", label = "Sok", avatar = null)
+        )
+    ),
+    ShoppingList(
+    id = "2",
+    name = "Lista zakupów2",
+    items = listOf(
+        ShoppingItem(id = "a", label = "Chleb", avatar = "KL", checked = true),
+        ShoppingItem(id = "b", label = "Mleko", avatar = "AB", checked = true),
+        ShoppingItem(id = "c", label = "Masło", avatar = null),
+        ShoppingItem(id = "d", label = "Sok", avatar = null)
+        )
+    )
+)

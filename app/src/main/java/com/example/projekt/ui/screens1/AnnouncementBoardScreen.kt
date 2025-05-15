@@ -9,22 +9,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.ioapp.ui.screens.components.AnnouncementItem
 import com.example.ioapp.ui.screens.components.AnnouncementType
 import com.example.ioapp.ui.screens.components.UserAnnouncement
+import com.example.todolistapp.data.Task
 
 
 @Composable
 fun AnnouncementBoardScreen(
+    task: Task? = null,
     onCreateAnnouncement: () -> Unit,
     onCreatePoll: () -> Unit,
 ) {
+    var name by remember { mutableStateOf(task?.name ?: "") }
     val announcements = remember {
         listOf(
-            UserAnnouncement("Anna Kowalska", "13:12", "Cześć! Czy wszystkim pasuje weekend 10–12 maja?"),
-            UserAnnouncement("Paweł Nowak", "13:40", "Zróbmy zakupy w piątek wieczorem przed wyjazdem."),
+            UserAnnouncement(
+                "Anna Kowalska",
+                "13:12",
+                "Cześć! Czy wszystkim pasuje weekend 10–12 maja?"
+            ),
+            UserAnnouncement(
+                "Paweł Nowak",
+                "13:40",
+                "Zróbmy zakupy w piątek wieczorem przed wyjazdem."
+            ),
             UserAnnouncement(
                 "Ewa Zielińska", "14:05", "Kiedy wyjazd?",
                 type = AnnouncementType.POLL,
@@ -53,15 +65,29 @@ fun AnnouncementBoardScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            contentPadding = padding,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(10.dp)
+                .padding(horizontal = 14.dp)
         ) {
-            items(announcements) { announcement ->
-                AnnouncementItem(announcement)
-                Spacer(modifier = Modifier.height(12.dp))
+            if (name.isNotBlank()) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 14.dp)
+                )
+            }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(announcements) { announcement ->
+                    AnnouncementItem(announcement)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }

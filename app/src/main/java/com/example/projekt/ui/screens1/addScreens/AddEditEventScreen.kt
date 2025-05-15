@@ -1,5 +1,5 @@
 @file:Suppress("FunctionName")
-package com.example.projekt.ui
+package com.example.projekt.ui.screens1.addScreens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
