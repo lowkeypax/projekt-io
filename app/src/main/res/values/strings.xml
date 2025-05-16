@@ -23,4 +23,6 @@
     <string name="add_event_label">Add new Event</string>
     <string name="add_announcement_screen_title">New Announcement</string>
     <string name="add_poll_screen_title">New poll</string>
+    <string name="add_expence_screen_title">New Expence</string>
+    <string name="add_list_screen_title">Add list</string>
 </resources>
