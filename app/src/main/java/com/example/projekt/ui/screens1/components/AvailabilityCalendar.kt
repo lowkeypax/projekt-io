@@ -97,7 +97,7 @@ fun MultiSelectCalendar() {
                         ) {
                             Text(
                                 text = day?.dayOfMonth?.toString() ?: "",
-                                color = if (isSelected) Color.White else Color.Black,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center
                             )
                         }
