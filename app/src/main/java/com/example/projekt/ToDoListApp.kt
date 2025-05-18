@@ -54,7 +54,7 @@ import com.example.todolistapp.ui.PostsEventScreen
 import com.example.todolistapp.ui.ToDoListScreen
 import com.example.todolistapp.ui.ToDosEventScreen
 import kotlinx.coroutines.launch
-import ui.screens.AnnouncementBoardScreen
+import com.example.ioapp.ui.screens.AnnouncementBoardScreen
 import ui.screens.RegisterScreen
 import ui.screens.WelcomeScreen
 
@@ -344,7 +344,10 @@ fun ToDoListApp (repository: ToDoRepository, navController: NavHostController = 
             }
             composable(route = ToDoAppDestinations.AddPoll.name)
             {
-                NewPollScreen(onSubmit = {navController.navigateUp()})
+                NewPollScreen(onSubmit = { question, options ->
+                    // TODO: zapisz do bazy danych
+                    navController.navigateUp()
+                })
             }
 
 //-------------------------------------RESZTA

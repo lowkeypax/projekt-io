@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
+import com.example.ioapp.ui.screens.AppNavGraph
 import com.example.todolistapp.ui.theme.ToDoListAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -12,10 +14,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ToDoListAppTheme {
-                // Access the repository from the application class which is
-                // cast to ToDoListApplication with the as keyword
-                val repository = (application as ToDoListApplication).toDoRepository
-                ToDoListApp(repository)
+                val navController = rememberNavController()
+                AppNavGraph(navController = navController)
             }
         }
     }

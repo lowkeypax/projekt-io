@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 //fun NewPollScreen(onSubmit: (String, List<String>) -> Unit = { _, _ -> }) {
-fun NewPollScreen(onSubmit: (String) -> Unit = {}) {
+fun NewPollScreen(onSubmit: (String, List<String>) -> Unit = { _, _ -> }) {
     var question by remember { mutableStateOf("") }
     var options = remember { mutableStateListOf("", "") }
 
@@ -65,10 +65,9 @@ fun NewPollScreen(onSubmit: (String) -> Unit = {}) {
         }
 
         Button(
-//            onClick = {
-//                onSubmit(question, options.filter { it.isNotBlank() })
-//            },
-            onClick = {onSubmit(question)},
+            onClick = {
+                onSubmit(question, options.filter { it.isNotBlank() })
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)

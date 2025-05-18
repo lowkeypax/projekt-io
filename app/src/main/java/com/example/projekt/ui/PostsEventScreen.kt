@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.todolistapp.ToDoAppDestinations
 import com.example.todolistapp.data.Task
-import ui.screens.AnnouncementBoardScreen
+import com.example.ioapp.ui.screens.AnnouncementBoardScreen
 
 @Composable
 fun PostsEventScreen(
